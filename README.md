@@ -254,6 +254,37 @@ make run
 make docker-build IMG=ghcr.io/alessandrolomanto/openclaw-operator:dev
 ```
 
+## Releasing
+
+A single command bumps the version across the entire repository and regenerates all manifests:
+
+```bash
+make prepare-release NEW_VERSION=0.0.3
+```
+
+This updates:
+
+| File | What changes |
+|---|---|
+| `Makefile` | `VERSION ?=` |
+| `charts/openclaw-operator/Chart.yaml` | `version` + `appVersion` |
+| `kustomize/overlays/production/kustomization.yaml` | `newTag` |
+| `README.md` | All version references |
+| `config/manager/kustomization.yaml` | Image tag (via kustomize) |
+| `dist/install.yaml` | Regenerated install manifest |
+| `bundle.yaml` | Regenerated bundle |
+
+Then commit, tag, and push:
+
+```bash
+git add -A
+git commit -m "release: v0.0.3"
+git tag -a v0.0.3 -m "Release v0.0.3"
+git push origin main --tags
+```
+
+Pushing the tag triggers the [release workflow](.github/workflows/release.yml) which builds the multi-arch image, pushes it to GHCR, packages the Helm chart, and creates a GitHub Release.
+
 ## License
 
 Apache License 2.0
