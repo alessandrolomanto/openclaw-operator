@@ -1,0 +1,45 @@
+OpenClaw Operator installed successfully!
+
+1. Verify the operator is running:
+
+   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "openclaw-operator.name" . }}
+
+2. Create a Secret with your API keys:
+
+   kubectl create secret generic openclaw-api-keys \
+     --from-literal=ANTHROPIC_API_KEY=sk-your-key
+
+3. Deploy an OpenClawInstance:
+
+   cat <<EOF | kubectl apply -f -
+   apiVersion: openclaw.nonnoalex.dev/v1alpha1
+   kind: OpenClawInstance
+   metadata:
+     name: my-agent
+   spec:
+     image:
+       repository: ghcr.io/openclaw/openclaw
+       tag: latest
+     config:
+       mergeMode: merge
+       raw:
+         gateway:
+           port: 18789
+           mode: local
+           bind: lan
+     envFrom:
+       - secretRef:
+           name: openclaw-api-keys
+     ollama:
+       enabled: true
+     cli:
+       enabled: true
+   EOF
+
+4. Check the status:
+
+   kubectl get openclawinstance
+
+5. Access the CLI:
+
+   kubectl exec -it my-agent-0 -c cli -- node /app/dist/index.js

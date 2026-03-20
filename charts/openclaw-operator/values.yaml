@@ -1,0 +1,124 @@
+# -- Number of operator replicas (1 is recommended with leader election)
+replicaCount: 1
+
+image:
+  # -- Operator image repository
+  repository: ghcr.io/alessandrolomanto/openclaw-operator
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag (defaults to Chart appVersion)
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Create a ServiceAccount
+  create: true
+  # -- Annotations for the ServiceAccount
+  annotations: {}
+  # -- Override ServiceAccount name
+  name: ""
+
+# -- Pod annotations
+podAnnotations: {}
+
+# -- Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# -- Operator container resources
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+# -- Node selector
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity rules
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/arch
+              operator: In
+              values:
+                - amd64
+                - arm64
+            - key: kubernetes.io/os
+              operator: In
+              values:
+                - linux
+
+# -- Enable leader election for HA deployments
+leaderElection:
+  enabled: true
+
+# -- Metrics configuration
+metrics:
+  # -- Enable metrics endpoint
+  enabled: true
+  # -- Metrics port
+  port: 8443
+
+# -- Health probe bind address
+healthProbeBindAddress: ":8081"
+
+# -- Install CRDs with Helm (disable if managing CRDs separately)
+installCRDs: true
+
+# -- Deploy a sample OpenClawInstance (set to false for production)
+sampleInstance:
+  enabled: false
+  name: my-agent
+  namespace: ""
+  spec:
+    image:
+      repository: ghcr.io/openclaw/openclaw
+      tag: latest
+    config:
+      mergeMode: merge
+      raw:
+        gateway:
+          port: 18789
+          mode: local
+          bind: lan
+    tools:
+      - jq
+      - curl
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 4Gi
+    storage:
+      size: 20Gi
+    ollama:
+      enabled: true
+      image:
+        repository: ollama/ollama
+        tag: latest
+      storage:
+        size: 50Gi
+    cli:
+      enabled: true

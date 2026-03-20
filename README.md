@@ -15,35 +15,72 @@ ConfigMap, PVCs, StatefulSets, Services — with config merge, tool injection, a
 - **Self-healing** — owner references + drift detection every 5 minutes
 - **Readiness-aware status** — phase reflects actual pod readiness, not just resource creation
 
-## Quick Start
+## Installation
 
-### Prerequisites
-
-- Kubernetes 1.28+
-- kubectl configured with cluster access
-
-### 1. Install the CRD and operator
+### Option A: Helm (recommended)
 
 ```bash
-# From source
-make install   # install CRDs
-make run       # run controller locally
+helm install openclaw-operator \
+  oci://ghcr.io/alessandrolomanto/openclaw-operator/charts/openclaw-operator \
+  --namespace openclaw-operator-system \
+  --create-namespace
 ```
 
-### 2. Create a Secret with your API keys
+Or from source:
+
+```bash
+helm install openclaw-operator \
+  ./charts/openclaw-operator \
+  --namespace openclaw-operator-system \
+  --create-namespace
+```
+
+Custom values:
+
+```bash
+helm install openclaw-operator ./charts/openclaw-operator \
+  --namespace openclaw-operator-system \
+  --create-namespace \
+  --set image.tag=v0.0.2 \
+  --set resources.limits.memory=512Mi
+```
+
+### Option B: Kustomize
+
+```bash
+# Production overlay (uses ghcr.io/alessandrolomanto/openclaw-operator:v0.0.2)
+kubectl apply -k config/production
+```
+
+### Option C: From release manifest
+
+```bash
+kubectl apply -f https://github.com/alessandrolomanto/openclaw-operator/releases/download/v0.0.2/install.yaml
+```
+
+### Option D: From source (development)
+
+```bash
+make install    # install CRDs
+make run        # run controller locally
+```
+
+## Quick Start
+
+### 1. Create a Secret with your API keys
 
 ```bash
 kubectl create secret generic openclaw-api-keys \
   --from-literal=ANTHROPIC_API_KEY=sk-your-key
 ```
 
-### 3. Deploy an instance
+### 2. Deploy an instance
 
 ```bash
 kubectl apply -f config/samples/openclaw_v1alpha1_openclawinstance.yaml
 ```
 
-### 4. Verify
+### 3. Verify
 
 ```bash
 kubectl get openclawinstance
@@ -54,7 +91,7 @@ kubectl get pods
 kubectl get svc
 ```
 
-### 5. Access the CLI
+### 4. Access the CLI
 
 ```bash
 kubectl exec -it my-agent-0 -c cli -- node /app/dist/index.js
@@ -147,6 +184,23 @@ OpenClawInstance CR
 | `spec.ollama.storage.size` | `string` | `50Gi` | Ollama models PVC size |
 | `spec.cli.enabled` | `bool` | `false` | Add CLI sidecar |
 
+## Helm Values Reference
+
+| Parameter | Default | Description |
+|---|---|---|
+| `replicaCount` | `1` | Operator replicas |
+| `image.repository` | `ghcr.io/alessandrolomanto/openclaw-operator` | Operator image |
+| `image.tag` | `(appVersion)` | Image tag |
+| `resources.limits.cpu` | `200m` | CPU limit |
+| `resources.limits.memory` | `256Mi` | Memory limit |
+| `resources.requests.cpu` | `50m` | CPU request |
+| `resources.requests.memory` | `128Mi` | Memory request |
+| `leaderElection.enabled` | `true` | Enable leader election |
+| `metrics.enabled` | `true` | Enable metrics endpoint |
+| `metrics.port` | `8443` | Metrics port |
+| `installCRDs` | `true` | Install CRDs with Helm |
+| `sampleInstance.enabled` | `false` | Deploy a sample OpenClawInstance |
+
 ## Development
 
 ```bash
@@ -165,7 +219,7 @@ make install
 make run
 
 # Build Docker image
-make docker-build IMG=ghcr.io/your-org/openclaw-operator:v0.0.1
+make docker-build IMG=ghcr.io/alessandrolomanto/openclaw-operator:dev
 ```
 
 ## License

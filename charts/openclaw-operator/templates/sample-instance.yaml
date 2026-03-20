@@ -1,0 +1,11 @@
+{{- if .Values.sampleInstance.enabled }}
+apiVersion: openclaw.nonnoalex.dev/v1alpha1
+kind: OpenClawInstance
+metadata:
+  name: {{ .Values.sampleInstance.name }}
+  namespace: {{ default .Release.Namespace .Values.sampleInstance.namespace }}
+  labels:
+    {{- include "openclaw-operator.labels" . | nindent 4 }}
+spec:
+  {{- toYaml .Values.sampleInstance.spec | nindent 2 }}
+{{- end }}
