@@ -48,8 +48,8 @@ helm install openclaw-operator ./charts/openclaw-operator \
 ### Option B: Kustomize 
 
 ```bash
-# Direct install
-kubectl apply -k github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2
+# Direct install (quote the URL for zsh compatibility)
+kubectl apply -k 'github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2'
 ```
 
 Or with a custom overlay — create your own `kustomization.yaml`:
