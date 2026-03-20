@@ -206,6 +206,22 @@ build-installer: manifests generate kustomize ## Generate a consolidated YAML wi
 bundle-yaml: build-installer ## Generate bundle.yaml at repo root (Prometheus Operator pattern).
 	cp dist/install.yaml bundle.yaml
 
+.PHONY: prepare-release
+prepare-release: ## Bump version everywhere and regenerate manifests (usage: make prepare-release NEW_VERSION=0.0.3).
+	@test -n "$(NEW_VERSION)" || (echo "Usage: make prepare-release NEW_VERSION=0.0.3" && exit 1)
+	@echo "Bumping version to $(NEW_VERSION)..."
+	sed -i '' '6s/VERSION ?= .*/VERSION ?= $(NEW_VERSION)/' Makefile
+	sed -i '' 's/^version: .*/version: $(NEW_VERSION)/' charts/openclaw-operator/Chart.yaml
+	sed -i '' 's/^appVersion: .*/appVersion: "$(NEW_VERSION)"/' charts/openclaw-operator/Chart.yaml
+	sed -i '' 's|newTag: v[0-9]*\.[0-9]*\.[0-9]*|newTag: v$(NEW_VERSION)|' kustomize/overlays/production/kustomization.yaml
+	sed -i '' 's|ref=v[0-9]*\.[0-9]*\.[0-9]*|ref=v$(NEW_VERSION)|g' README.md
+	sed -i '' 's|/v[0-9]*\.[0-9]*\.[0-9]*|/v$(NEW_VERSION)|g' README.md
+	sed -i '' 's|tag=v[0-9]*\.[0-9]*\.[0-9]*|tag=v$(NEW_VERSION)|g' README.md
+	sed -i '' 's|newTag: v[0-9]*\.[0-9]*\.[0-9]*|newTag: v$(NEW_VERSION)|g' README.md
+	$(MAKE) build-installer IMG=ghcr.io/alessandrolomanto/openclaw-operator:v$(NEW_VERSION)
+	cp dist/install.yaml bundle.yaml
+	@echo "Done. Review changes, then: git add -A && git commit && git tag v$(NEW_VERSION) && git push --tags"
+
 ##@ Deployment
 
 ifndef ignore-not-found
