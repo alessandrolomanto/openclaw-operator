@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -44,10 +45,12 @@ const (
 // +kubebuilder:rbac:groups=openclaw.nonnoalex.dev,resources=openclawinstances/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services;configmaps;persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 type OpenClawInstanceReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -61,6 +64,7 @@ func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// 2. Handle deletion
 	if !instance.DeletionTimestamp.IsZero() {
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Deleting", "Cleaning up managed resources")
 		return r.handleDeletion(ctx, instance)
 	}
 
@@ -71,6 +75,7 @@ func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// 4. Set initial phase
 	if instance.Status.Phase == "" {
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Provisioning", "Starting initial reconciliation")
 		return ctrl.Result{Requeue: true}, r.setPhase(ctx, instance, "Pending")
 	}
 	if instance.Status.Phase == "Pending" {
@@ -97,6 +102,8 @@ func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	for _, step := range steps {
 		if err := step.fn(ctx, instance); err != nil {
 			log.Error(err, "reconciliation failed", "step", step.name)
+			r.Recorder.Eventf(instance, corev1.EventTypeWarning, "ReconcileFailed",
+				"Failed to reconcile %s: %v", step.name, err)
 			_ = r.setPhase(ctx, instance, "Failed")
 			r.setCondition(instance, "Ready", false,
 				"ReconcileFailed", fmt.Sprintf("%s: %v", step.name, err))
@@ -119,6 +126,10 @@ func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
+	if ready {
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Reconciled", "All resources are ready")
+	}
+
 	log.Info("reconciliation complete", "phase", phase, "ready", ready)
 	if !ready {
 		return ctrl.Result{RequeueAfter: 15 * time.Second}, nil
@@ -127,6 +138,8 @@ func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 }
 
 func (r *OpenClawInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Recorder = mgr.GetEventRecorderFor("openclaw-operator")
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&openclawv1alpha1.OpenClawInstance{}).
 		Owns(&appsv1.StatefulSet{}).

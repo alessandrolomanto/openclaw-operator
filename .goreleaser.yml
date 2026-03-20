@@ -1,0 +1,41 @@
+version: 2
+
+project_name: openclaw-operator
+
+builds:
+  - main: ./cmd
+    binary: manager
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/alessandrolomanto/openclaw-operator/internal/version.Version={{.Version}}
+      - -X github.com/alessandrolomanto/openclaw-operator/internal/version.GitCommit={{.ShortCommit}}
+      - -X github.com/alessandrolomanto/openclaw-operator/internal/version.BuildDate={{.Date}}
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "Merge pull request"
+
+release:
+  github:
+    owner: alessandrolomanto
+    name: openclaw-operator
+  draft: false
+  prerelease: auto
+  extra_files:
+    - glob: dist/install.yaml

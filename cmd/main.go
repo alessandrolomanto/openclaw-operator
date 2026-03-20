@@ -39,6 +39,7 @@ import (
 
 	openclawv1alpha1 "github.com/alessandrolomanto/openclaw-operator/api/v1alpha1"
 	"github.com/alessandrolomanto/openclaw-operator/internal/controller"
+	"github.com/alessandrolomanto/openclaw-operator/internal/version"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -88,6 +89,12 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	setupLog.Info("starting openclaw-operator",
+		"version", version.Version,
+		"commit", version.GitCommit,
+		"built", version.BuildDate,
+	)
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
