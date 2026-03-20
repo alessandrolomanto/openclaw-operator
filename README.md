@@ -45,11 +45,35 @@ helm install openclaw-operator ./charts/openclaw-operator \
   --set resources.limits.memory=512Mi
 ```
 
-### Option B: Kustomize
+### Option B: Kustomize 
 
 ```bash
-# Production overlay (uses ghcr.io/alessandrolomanto/openclaw-operator:v0.0.2)
-kubectl apply -k config/production
+# Direct install (like Prometheus Operator)
+kubectl apply -k github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2
+```
+
+Or with a custom overlay — create your own `kustomization.yaml`:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: my-namespace
+resources:
+  - github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2
+images:
+  - name: controller
+    newName: ghcr.io/alessandrolomanto/openclaw-operator
+    newTag: v0.0.2
+```
+
+Pre-built overlays are available in the `kustomize/` directory:
+
+```bash
+# Production
+kubectl apply -k kustomize/overlays/production
+
+# Development (relaxed resources, latest tag)
+kubectl apply -k kustomize/overlays/development
 ```
 
 ### Option C: From release manifest

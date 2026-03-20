@@ -202,6 +202,10 @@ build-installer: manifests generate kustomize ## Generate a consolidated YAML wi
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > dist/install.yaml
 
+.PHONY: bundle-yaml
+bundle-yaml: build-installer ## Generate bundle.yaml at repo root (Prometheus Operator pattern).
+	cp dist/install.yaml bundle.yaml
+
 ##@ Deployment
 
 ifndef ignore-not-found

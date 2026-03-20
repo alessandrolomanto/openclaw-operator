@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# References the kubebuilder-generated manifests as upstream base.
+# Users can also use the remote base directly:
+#   resources:
+#     - github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2
+resources:
+  - ../../config/default

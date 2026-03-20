@@ -4,7 +4,7 @@ kind: Kustomization
 namespace: openclaw-operator-system
 
 resources:
-  - ../default
+  - ../../base
 
 images:
   - name: controller
