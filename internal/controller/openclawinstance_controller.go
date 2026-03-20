@@ -38,6 +38,14 @@ const (
 	requeueAfter   = 5 * time.Minute
 	configHashAnno = "openclaw.nonnoalex.dev/config-hash"
 	toolsHashAnno  = "openclaw.nonnoalex.dev/tools-hash"
+
+	phaseProvisioning = "Provisioning"
+	phasePending      = "Pending"
+	phaseRunning      = "Running"
+	phaseFailed       = "Failed"
+	phaseTerminating  = "Terminating"
+
+	mergeModeOverwrite = "overwrite"
 )
 
 // +kubebuilder:rbac:groups=openclaw.nonnoalex.dev,resources=openclawinstances,verbs=get;list;watch;create;update;patch;delete
@@ -54,7 +62,7 @@ type OpenClawInstanceReconciler struct {
 }
 
 func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
 	// 1. Fetch the CR
 	instance := &openclawv1alpha1.OpenClawInstance{}
@@ -76,10 +84,10 @@ func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	// 4. Set initial phase
 	if instance.Status.Phase == "" {
 		r.Recorder.Event(instance, corev1.EventTypeNormal, "Provisioning", "Starting initial reconciliation")
-		return ctrl.Result{Requeue: true}, r.setPhase(ctx, instance, "Pending")
+		return ctrl.Result{Requeue: true}, r.setPhase(ctx, instance, phasePending)
 	}
-	if instance.Status.Phase == "Pending" {
-		_ = r.setPhase(ctx, instance, "Provisioning")
+	if instance.Status.Phase == phasePending {
+		_ = r.setPhase(ctx, instance, phaseProvisioning)
 	}
 
 	// 5. Apply defaults for fields the user left empty
@@ -101,10 +109,10 @@ func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	for _, step := range steps {
 		if err := step.fn(ctx, instance); err != nil {
-			log.Error(err, "reconciliation failed", "step", step.name)
+			logger.Error(err, "reconciliation failed", "step", step.name)
 			r.Recorder.Eventf(instance, corev1.EventTypeWarning, "ReconcileFailed",
 				"Failed to reconcile %s: %v", step.name, err)
-			_ = r.setPhase(ctx, instance, "Failed")
+			_ = r.setPhase(ctx, instance, phaseFailed)
 			r.setCondition(instance, "Ready", false,
 				"ReconcileFailed", fmt.Sprintf("%s: %v", step.name, err))
 			_ = r.Status().Update(ctx, instance)
@@ -130,7 +138,7 @@ func (r *OpenClawInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		r.Recorder.Event(instance, corev1.EventTypeNormal, "Reconciled", "All resources are ready")
 	}
 
-	log.Info("reconciliation complete", "phase", phase, "ready", ready)
+	logger.Info("reconciliation complete", "phase", phase, "ready", ready)
 	if !ready {
 		return ctrl.Result{RequeueAfter: 15 * time.Second}, nil
 	}

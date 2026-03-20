@@ -114,11 +114,11 @@ func (r *OpenClawInstanceReconciler) buildInitContainers(
 
 func buildConfigInitScript(oc *openclawv1alpha1.OpenClawInstance) string {
 	mergeMode := "merge"
-	if oc.Spec.Config != nil && oc.Spec.Config.MergeMode == "overwrite" {
-		mergeMode = "overwrite"
+	if oc.Spec.Config != nil && oc.Spec.Config.MergeMode == mergeModeOverwrite {
+		mergeMode = mergeModeOverwrite
 	}
 
-	if mergeMode == "overwrite" {
+	if mergeMode == mergeModeOverwrite {
 		return `cp /config-source/openclaw.json /home/node/.openclaw/openclaw.json
 echo "Config overwritten from ConfigMap"`
 	}

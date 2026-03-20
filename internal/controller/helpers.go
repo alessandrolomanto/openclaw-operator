@@ -107,10 +107,10 @@ func (r *OpenClawInstanceReconciler) determinePhase(
 	gatewaySts := &appsv1.StatefulSet{}
 	key := client.ObjectKey{Name: oc.Name, Namespace: oc.Namespace}
 	if err := r.Get(ctx, key, gatewaySts); err != nil {
-		return "Provisioning", false, "Gateway StatefulSet not found yet"
+		return phaseProvisioning, false, "Gateway StatefulSet not found yet"
 	}
 	if gatewaySts.Status.ReadyReplicas < 1 {
-		return "Provisioning", false, fmt.Sprintf(
+		return phaseProvisioning, false, fmt.Sprintf(
 			"Gateway: %d/%d replicas ready",
 			gatewaySts.Status.ReadyReplicas, gatewaySts.Status.Replicas)
 	}
@@ -120,22 +120,22 @@ func (r *OpenClawInstanceReconciler) determinePhase(
 		ollamaSts := &appsv1.StatefulSet{}
 		ollamaKey := client.ObjectKey{Name: oc.Name + "-ollama", Namespace: oc.Namespace}
 		if err := r.Get(ctx, ollamaKey, ollamaSts); err != nil {
-			return "Provisioning", false, "Ollama StatefulSet not found yet"
+			return phaseProvisioning, false, "Ollama StatefulSet not found yet"
 		}
 		if ollamaSts.Status.ReadyReplicas < 1 {
-			return "Provisioning", false, fmt.Sprintf(
+			return phaseProvisioning, false, fmt.Sprintf(
 				"Ollama: %d/%d replicas ready",
 				ollamaSts.Status.ReadyReplicas, ollamaSts.Status.Replicas)
 		}
 	}
 
-	return "Running", true, "All resources are ready"
+	return phaseRunning, true, "All resources are ready"
 }
 
 func (r *OpenClawInstanceReconciler) handleDeletion(
 	ctx context.Context, oc *openclawv1alpha1.OpenClawInstance,
 ) (ctrl.Result, error) {
-	_ = r.setPhase(ctx, oc, "Terminating")
+	_ = r.setPhase(ctx, oc, phaseTerminating)
 	controllerutil.RemoveFinalizer(oc, finalizerName)
 	return ctrl.Result{}, r.Update(ctx, oc)
 }
