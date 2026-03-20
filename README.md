@@ -48,7 +48,7 @@ helm install openclaw-operator ./charts/openclaw-operator \
 ### Option B: Kustomize 
 
 ```bash
-# Direct install (like Prometheus Operator)
+# Direct install
 kubectl apply -k github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2
 ```
 
@@ -82,7 +82,15 @@ kubectl apply -k kustomize/overlays/development
 kubectl apply -f https://github.com/alessandrolomanto/openclaw-operator/releases/download/v0.0.2/install.yaml
 ```
 
-### Option D: From source (development)
+### Option D: CRD only
+
+Install just the CRD (useful when running the operator outside the cluster):
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/alessandrolomanto/openclaw-operator/main/config/crd/bases/openclaw.nonnoalex.dev_openclawinstances.yaml
+```
+
+### Option E: From source (development)
 
 ```bash
 make install    # install CRDs
