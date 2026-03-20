@@ -1,0 +1,29 @@
+# This rule is not used by the project openclaw-operator itself.
+# It is provided to allow the cluster admin to help manage permissions for users.
+#
+# Grants read-only access to openclaw.nonnoalex.dev resources.
+# This role is intended for users who need visibility into these resources
+# without permissions to modify them. It is ideal for monitoring purposes and limited-access viewing.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: openclaw-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: openclawinstance-viewer-role
+rules:
+- apiGroups:
+  - openclaw.nonnoalex.dev
+  resources:
+  - openclawinstances
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - openclaw.nonnoalex.dev
+  resources:
+  - openclawinstances/status
+  verbs:
+  - get

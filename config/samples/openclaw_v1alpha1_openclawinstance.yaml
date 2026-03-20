@@ -1,0 +1,58 @@
+apiVersion: openclaw.nonnoalex.dev/v1alpha1
+kind: OpenClawInstance
+metadata:
+  name: my-agent
+  namespace: default
+spec:
+  image:
+    repository: ghcr.io/openclaw/openclaw
+    tag: "latest"
+
+  config:
+    mergeMode: merge
+    raw:
+      gateway:
+        port: 18789
+        mode: local
+        bind: lan
+  envFrom:
+    - secretRef:
+        name: openclaw-api-keys
+
+  env:
+    - name: NODE_ENV
+      value: production
+
+  tools:
+    - jq
+    - vim
+    - curl
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+  storage:
+    size: "20Gi"
+
+  ollama:
+    enabled: true
+    image:
+      repository: ollama/ollama
+      tag: latest
+    resources:
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+    storage:
+      size: "50Gi"
+
+  cli:
+    enabled: true

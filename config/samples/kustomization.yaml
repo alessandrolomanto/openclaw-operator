@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- openclaw_v1alpha1_openclawinstance.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
