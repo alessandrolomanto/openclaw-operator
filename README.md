@@ -48,11 +48,11 @@ helm install openclaw-operator ./charts/openclaw-operator \
 ### Option B: Kustomize 
 
 ```bash
-# Direct install (quote the URL for zsh compatibility)
-kubectl apply -k 'github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2'
+# Using standalone kustomize (supports remote refs)
+kustomize build 'github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2' | kubectl apply -f -
 ```
 
-Or with a custom overlay — create your own `kustomization.yaml`:
+Or create a local overlay that references the repo as a remote base:
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
