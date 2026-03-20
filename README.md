@@ -41,45 +41,42 @@ Custom values:
 helm install openclaw-operator ./charts/openclaw-operator \
   --namespace openclaw-operator-system \
   --create-namespace \
-  --set image.tag=v0.0.2 \
+  --set image.tag=v0.0.3 \
   --set resources.limits.memory=512Mi
 ```
 
-### Option B: Kustomize 
+### Option B: Kustomize
+
+Using the standalone `kustomize` binary (required for remote refs — `kubectl -k` does not support them):
 
 ```bash
-# Using standalone kustomize (supports remote refs)
-kustomize build 'github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2' | kubectl apply -f -
+kustomize build 'github.com/alessandrolomanto/openclaw-operator?ref=v0.0.3' | kubectl apply -f -
 ```
 
-Or create a local overlay that references the repo as a remote base:
+Or from a local clone:
+
+```bash
+kubectl apply -k kustomize/
+```
+
+You can also create your own overlay referencing the repo as a remote base:
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-namespace
 resources:
-  - github.com/alessandrolomanto/openclaw-operator?ref=v0.0.2
+  - github.com/alessandrolomanto/openclaw-operator?ref=v0.0.3
 images:
   - name: controller
     newName: ghcr.io/alessandrolomanto/openclaw-operator
-    newTag: v0.0.2
-```
-
-Pre-built overlays are available in the `kustomize/` directory:
-
-```bash
-# Production
-kubectl apply -k kustomize/overlays/production
-
-# Development (relaxed resources, latest tag)
-kubectl apply -k kustomize/overlays/development
+    newTag: v0.0.3
 ```
 
 ### Option C: From release manifest
 
 ```bash
-kubectl apply -f https://github.com/alessandrolomanto/openclaw-operator/releases/download/v0.0.2/install.yaml
+kubectl apply -f https://github.com/alessandrolomanto/openclaw-operator/releases/download/v0.0.3/install.yaml
 ```
 
 ### Option D: CRD only
@@ -268,7 +265,7 @@ This updates:
 |---|---|
 | `Makefile` | `VERSION ?=` |
 | `charts/openclaw-operator/Chart.yaml` | `version` + `appVersion` |
-| `kustomize/overlays/production/kustomization.yaml` | `newTag` |
+| `kustomize/kustomization.yaml` | `newTag` |
 | `README.md` | All version references |
 | `config/manager/kustomization.yaml` | Image tag (via kustomize) |
 | `dist/install.yaml` | Regenerated install manifest |

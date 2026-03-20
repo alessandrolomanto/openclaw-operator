@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.0.2
+VERSION ?= 0.0.3
 GIT_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 LDFLAGS := -X github.com/alessandrolomanto/openclaw-operator/internal/version.Version=$(VERSION) \
@@ -213,7 +213,7 @@ prepare-release: ## Bump version everywhere and regenerate manifests (usage: mak
 	sed -i '' '6s/VERSION ?= .*/VERSION ?= $(NEW_VERSION)/' Makefile
 	sed -i '' 's/^version: .*/version: $(NEW_VERSION)/' charts/openclaw-operator/Chart.yaml
 	sed -i '' 's/^appVersion: .*/appVersion: "$(NEW_VERSION)"/' charts/openclaw-operator/Chart.yaml
-	sed -i '' 's|newTag: v[0-9]*\.[0-9]*\.[0-9]*|newTag: v$(NEW_VERSION)|' kustomize/overlays/production/kustomization.yaml
+	sed -i '' 's|newTag: v[0-9]*\.[0-9]*\.[0-9]*|newTag: v$(NEW_VERSION)|' kustomize/kustomization.yaml
 	sed -i '' 's|ref=v[0-9]*\.[0-9]*\.[0-9]*|ref=v$(NEW_VERSION)|g' README.md
 	sed -i '' 's|/v[0-9]*\.[0-9]*\.[0-9]*|/v$(NEW_VERSION)|g' README.md
 	sed -i '' 's|tag=v[0-9]*\.[0-9]*\.[0-9]*|tag=v$(NEW_VERSION)|g' README.md

@@ -4,9 +4,9 @@ kind: Kustomization
 namespace: openclaw-operator-system
 
 resources:
-  - ../../base
+  - base
 
 images:
   - name: controller
     newName: ghcr.io/alessandrolomanto/openclaw-operator
-    newTag: v0.0.2
+    newTag: v0.0.3
