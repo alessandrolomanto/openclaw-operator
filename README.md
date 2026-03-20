@@ -15,6 +15,11 @@ ConfigMap, PVCs, StatefulSets, Services — with config merge, tool injection, a
 - **Self-healing** — owner references + drift detection every 5 minutes
 - **Readiness-aware status** — phase reflects actual pod readiness, not just resource creation
 
+> **Warning**
+> This project is under active development and is not yet considered production-ready.
+> Use it at your own risk. The maintainers are not responsible for any issues arising
+> from its use in production environments.
+
 ## Installation
 
 ### Option A: Helm (recommended)
